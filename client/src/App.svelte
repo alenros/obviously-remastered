@@ -1,10 +1,11 @@
 <script>
-  import PlayersList from "./PlayersList.svelte";
+  import GameLobby from "./GameLobby.svelte";
   import { players } from "./store";
 
   export let name;
   export let roomId;
   export let hasJoinedRoom = false;
+  let hasGameStarted = false;
   async function createRoomAndPlayer() {
     let playerId = await createPlayer();
     let response = await createRoom(playerId);
@@ -14,18 +15,22 @@
   }
 
   async function createRoom(playerId) {
-    console.log(`Creating room for player ${playerId}`);
-    fetch(`http://localhost:5000/api/v1/rooms/${playerId}`, {
+    try{
+    const response = await fetch(`http://localhost:5000/api/v1/rooms/${playerId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-    })
-      .then(async (res) => await res.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((err) => console.log(err));
+    });
+    
+      const data = await response.json();
+
+      console.log(data);
+      return data;
+    } catch (err) {
+      console.log(`error: ${err}`);
+      return;
+    }
   }
 
   async function createPlayer() {
@@ -42,9 +47,8 @@
       const data = await response.json();
       console.log(data);
       playerId = data.player.id;
-      console.log(`Player id returned: ${playerId}`);
     } catch (err) {
-      console.log(err);
+      console.log(`error: ${err}`);
     }
     return playerId;
   }
@@ -76,23 +80,12 @@
         hasJoinedRoom = true;
       })
       .catch((err) => console.log(err));
-    playerList = $players;
     updatePlayersList();
   }
 
   async function updatePlayersList() {
     console.log(`Updating players list for room ${roomId}`);
     players.refreshList(roomId);
-    // console.log("Updating players list");
-    // await fetch(`http://localhost:5000/api/v1/rooms/${roomId}/players`)
-    //   .then(async (res) => await res.json())
-    //   .then((data) => {
-    //     console.log(data);
-    //     players.set(data.players.map((player) => {
-    //       return { id: player.id, name: player.name };
-    //     }));
-    //   })
-    //   .catch((err) => console.log(err));
   }
 </script>
 
@@ -111,13 +104,9 @@
   </p>
 
   {#if roomId !== undefined && hasJoinedRoom}
-    <p>Room Code: {roomId}</p>
-    {#if $players.length > 0}
-      <p>Players:</p>
-	  <PlayersList />
-
-    {/if}
+    <GameLobby {roomId} {hasGameStarted} />
   {/if}
+
 </main>
 
 <style>
