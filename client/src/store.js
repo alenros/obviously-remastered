@@ -1,11 +1,10 @@
-import { writable } from 'svelte/store';
+import { readable } from 'svelte/store';
 
 function createPlayersStore() {
     const { subscribe, set, update } = writable([]);
 
     return {
         subscribe,
-        set,
         // TODO: This should actually refresh the list for all connected players
         refreshList: async (roomId) => {
             console.log("Updating players list");
