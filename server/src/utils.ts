@@ -12,6 +12,7 @@ export function serializeRoom(room: Room) {
   return {
     code: room.code,
     players: room.players.map(serializePlayer),
+    hasGameStarted: room.hasGameStarted,
   };
 }
 

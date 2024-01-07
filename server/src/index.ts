@@ -8,47 +8,9 @@ app.use(cors());
 app.use(express.json());
 const server = http.createServer(app);
 
-let rooms: Room[] = [
-  {
-    code: "Room1",
-    players: [],
-  },
-  {
-    code: "Room2",
-    players: [],
-  },
-  {
-    code: "Room3",
-    players: [],
-  },
-  {
-    code: "Room4",
-    players: [],
-  },
-];
+let rooms: Room[] = [];
 
-let players: Player[] = [
-  {
-    id: 1,
-    name: "Player 1",
-    room: null,
-  },
-  {
-    id: 2,
-    name: "Player 2",
-    room: null,
-  },
-  {
-    id: 3,
-    name: "Player 3",
-    room: null,
-  },
-  {
-    id: 4,
-    name: "Player 4",
-    room: null,
-  },
-];
+let players: Player[] = [];
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.json({ message: "connection made" });
@@ -92,6 +54,7 @@ function createNewRoom() {
   const room: Room = {
     code: generateRoomCode(),
     players: [],
+    hasGameStarted: false,
   };
 
   console.log(`Creating new room with code: ${room.code}`);
@@ -128,24 +91,29 @@ function removePlayerFromRoom(player: Player, room: Room) {
 }
 
 // Player creates and joins room
-app.post("/api/v1/rooms/:playerId", (req: Request, res: Response, next: NextFunction) => {
-  const playerId = parseInt(req.params.playerId);
-  console.log(`Creating new room for player: ${playerId} with shortcut`);
-  const room = createNewRoom();
-  const player = players.find((player) => player.id === playerId);
-  if (player) {
-    addPlayerToRoom(player, room);
-  }
-  const roomAsJson = utils.serializeRoom(room);
+app.post(
+  "/api/v1/rooms/:playerId",
+  (req: Request, res: Response, next: NextFunction) => {
+    const playerId = parseInt(req.params.playerId);
+    console.log(`Creating new room for player: ${playerId} with shortcut`);
+    const room = createNewRoom();
+    const player = players.find((player) => player.id === playerId);
+    if (player) {
+      addPlayerToRoom(player, room);
+    }
+    const roomAsJson = utils.serializeRoom(room);
 
-  res.json({ room: roomAsJson });
-});
+    res.json({ room: roomAsJson });
+  }
+);
 
 // Player joins room
 app.post(
   "/api/v1/rooms/:id/players/:playerId",
   (req: Request, res: Response, next: NextFunction) => {
-    console.log(`Adding player: ${req.params.playerId} to room: ${req.params.id}`);
+    console.log(
+      `Adding player: ${req.params.playerId} to room: ${req.params.id}`
+    );
 
     const room = rooms.find((room) => room.code === req.params.id);
     const playerId = parseInt(req.params.playerId);
@@ -162,17 +130,36 @@ app.post(
   }
 );
 
+app.put(
+  "/api/v1/rooms/:id",
+  (req: Request, res: Response, next: NextFunction) => {
+    console.log(`Updating room: ${req.params.id}`);
+
+    const room = rooms.find((room) => room.code === req.params.id);
+    if (!room) {
+      res.status(404).json({ message: "Room not found" });
+    } else {
+      room.hasGameStarted = req.body.hasGameStarted;
+      const roomAsJson = utils.serializeRoom(room);
+
+      res.json({ room: roomAsJson });
+    }
+  }
+);
+
 // Player leaves room
 app.delete(
   "/api/v1/rooms/:id/players/:playerId",
   (req: Request, res: Response, next: NextFunction) => {
-    console.log(`Removing player: ${req.params.playerId} from room: ${req.params.id}`);
+    console.log(
+      `Removing player: ${req.params.playerId} from room: ${req.params.id}`
+    );
 
     const room = rooms.find((room) => room.code === req.params.id);
     const playerId = parseInt(req.params.playerId);
     const player = players.find((player) => player.id === playerId);
     if (room && player) {
-      removePlayerFromRoom(player, room)
+      removePlayerFromRoom(player, room);
       const roomAsJson = utils.serializeRoom(room);
       res.json({ room: roomAsJson });
     } else {
@@ -193,11 +180,15 @@ app.post(
       console.log(`New player: ${player.id} created with name: ${player.name}`);
 
       const playerAsJson = utils.serializePlayer(player);
-      res.json({player: playerAsJson });
+      res.json({ player: playerAsJson });
     } catch (error) {
       res
         .status(400)
-        .json({ message: `Player ${JSON.stringify(req.body.name)} could not be created` });
+        .json({
+          message: `Player ${JSON.stringify(
+            req.body.name
+          )} could not be created`,
+        });
     }
   }
 );
