@@ -51,13 +51,16 @@
   }
 
   async function createRoom(playerId) {
-    try{
-    const response = await fetch(`http://localhost:5000/api/v1/rooms/${playerId}`, {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/v1/rooms/${playerId}`,
+        {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-    });
+        }
+      );
     
       const data = await response.json();
 
@@ -145,7 +148,6 @@
   {#if roomId !== undefined && hasJoinedRoom}
     <GameLobby {roomId} {hasGameStarted} />
   {/if}
-
 </main>
 
 <style>
