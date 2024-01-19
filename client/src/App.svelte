@@ -1,16 +1,52 @@
 <script>
   import GameLobby from "./GameLobby.svelte";
   import { players } from "./store";
+  import { initializeApp } from "firebase/app";
+  import { getDatabase, onValue, ref, off } from "firebase/database";
 
   export let name;
   export let roomId;
   export let hasJoinedRoom = false;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAD5zy3_1xS7sQvHVf00zMht5RNcCUzoYQ",
+    authDomain: "obviously-5a958.firebaseapp.com",
+    projectId: "obviously-5a958",
+    storageBucket: "obviously-5a958.appspot.com",
+    messagingSenderId: "738128384006",
+    appId: "1:738128384006:web:6a99f01b6dd55eb942b387",
+    databaseURL:
+      "https://obviously-5a958-default-rtdb.europe-west1.firebasedatabase.app",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  console.log(app);
+  const database = getDatabase(app);
+
+  let playersRef = ref(database, `${roomId}/players/`);
+
   let hasGameStarted = false;
+
+  function subscribeToPlayers() {
+    console.log("Added listener for Players");
+
+    playersRef = ref(database, `${roomId}/players/`);
+
+    onValue(playersRef, (snapshot) => {
+      const data = snapshot.val();
+      players.set(data);
+      console.log(`got new data from players: ${JSON.stringify(data)}`);
+    });
+  }
+
   async function createRoomAndPlayer() {
     let playerId = await createPlayer();
     let response = await createRoom(playerId);
     console.log(response);
     roomId = response.room.code;
+
+    subscribeToPlayers();
+
     console.log(`Room id returned: ${roomId}`);
   }
 
@@ -80,6 +116,9 @@
         hasJoinedRoom = true;
       })
       .catch((err) => console.log(err));
+
+    subscribeToPlayers();
+
     updatePlayersList();
   }
 
