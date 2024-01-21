@@ -3,9 +3,16 @@
       "target": "es6",
       "module": "commonjs",
       "outDir": "./dist",
-      "rootDir": "./src",
+      // "rootDir": "./src",
       "strict": true,
       "moduleResolution": "node",
-      "esModuleInterop": true
-  }
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true
+  },
+  // "include": ["src/**/*", "../shared-types/**/*"]
+  "include": ["src/**/*", "src/node_modules", "src/*", "../Shared-types/**/*"],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
 }
+
+

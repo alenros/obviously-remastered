@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
   import GameLobby from "./GameLobby.svelte";
   import { players } from "./store";
   import { initializeApp } from "firebase/app";
   import { getDatabase, onValue, ref, off } from "firebase/database";
+  // import {Player, Room} from "../../shared-types/types";
 
-  export let name;
-  export let roomId;
+  export let name: string;
+  export let roomId: string;
   export let hasJoinedRoom = false;
 
   const firebaseConfig = {
@@ -50,7 +51,7 @@
     console.log(`Room id returned: ${roomId}`);
   }
 
-  async function createRoom(playerId) {
+  async function createRoom(playerId: number) {
     try {
       const response = await fetch(
         `http://localhost:5000/api/v1/rooms/${playerId}`,

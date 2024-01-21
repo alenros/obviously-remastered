@@ -1,9 +1,9 @@
-<script>
-    export let hasGameStarted = false;
-    export let roomId;
-    import PlayersList from "./PlayersList.svelte";
+<script lang="ts">
+  export let hasGameStarted = false;
+  export let roomId: number;
+  import PlayersList from "./PlayersList.svelte";
 
-    async function startGame() {
+  async function startGame() {
     console.log(`Starting game for room ${roomId}`);
     await fetch(`http://localhost:5000/api/v1/rooms/${roomId}`, {
       method: "PUT",
@@ -20,7 +20,7 @@
       .catch((err) => console.log(err));
   }
 
-  async function endGame(){
+  async function endGame() {
     console.log(`Ending game for room ${roomId}`);
     await fetch(`http://localhost:5000/api/v1/rooms/${roomId}`, {
       method: "PUT",
@@ -39,7 +39,7 @@
 </script>
 
 <p>Room Code: {roomId}</p>
-    
+
 {#if hasGameStarted === false}
   <div><button on:click={() => startGame()}>Start Game</button></div>
 {:else}

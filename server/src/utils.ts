@@ -1,5 +1,5 @@
-import { Player } from "./types";
-import { Room } from "./types";
+import { Player, Room } from "../../Shared-types/types";
+
 export function serializePlayer(player: Player) {
   return {
     id: player.id,

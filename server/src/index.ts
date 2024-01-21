@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
-import { Room, Player } from "./types";
 import cors from "cors";
+import { Player, Room } from "../../Shared-types/types";
 import * as utils from "./utils";
 const app = express();
 app.use(cors());

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { players } from "./store";
 </script>
 
