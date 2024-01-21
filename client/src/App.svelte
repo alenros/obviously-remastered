@@ -29,14 +29,40 @@
   let hasGameStarted = false;
 
   function subscribeToPlayers() {
-    console.log("Added listener for Players");
+    console.log("Added listener for Players on room " + roomId);
 
     playersRef = ref(database, `${roomId}/players/`);
 
     onValue(playersRef, (snapshot) => {
       const data = snapshot.val();
-      players.set(data);
-      console.log(`got new data from players: ${JSON.stringify(data)}`);
+
+      if (data === null) {
+        console.log("player data is null");
+        return;
+      }
+
+      console.log(`players data: ${JSON.stringify(data)}`);
+      // console.log(`222: ${(data["222"]).id} ${(data["222"]).name}`);
+      let newPlayers = Object.entries(JSON.parse(`"${data}"`)).map(([id, player]) => ({
+        id,
+        name: player.name,
+      }));
+      console.log(`new players: ${JSON.stringify(newPlayers)}`);
+      newPlayers.forEach((player) => {
+        console.log(`player: ${player}`);
+        console.log(`player: ${player.id} ${player.name}`);
+      });
+      // console.log(`new players: ${newPlayers}`);
+
+      // let newPlayer = {
+      //   id: data.id,
+      //   name: data.name,
+      // };
+
+      // console.log(`new player: ${JSON.stringify(newPlayer)}`);
+      // players.update((currentPlayers) => [...currentPlayers, newPlayer]);
+
+      // players.set(data["player"]);
     });
   }
 
@@ -56,13 +82,13 @@
       const response = await fetch(
         `http://localhost:5000/api/v1/rooms/${playerId}`,
         {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
-    
+
       const data = await response.json();
 
       console.log(data);
@@ -123,12 +149,48 @@
 
     subscribeToPlayers();
 
-    updatePlayersList();
+    // updatePlayersList();
   }
 
   async function updatePlayersList() {
     console.log(`Updating players list for room ${roomId}`);
     players.refreshList(roomId);
+  }
+
+  async function leaveRoom() {
+    if (name === undefined) {
+      console.log("Player Name is undefined");
+      return;
+    }
+    if (roomId === undefined) {
+      console.log("Room Id is undefined");
+      return;
+    }
+
+    let playerId = await createPlayer();
+    console.log(`Leaving room ${roomId} for player ${playerId}`);
+    await fetch(
+      `http://localhost:5000/api/v1/rooms/${roomId}/players/${playerId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+      .then(async (res) => await res.json())
+      .then((data) => {
+        console.log(data);
+        // TODO Ensure that the player has left the room before setting hasJoinedRoom
+        hasJoinedRoom = false;
+      })
+      .catch((err) => console.log(err));
+
+    // playersRef = ref(database, `${roomId}/players/`);
+    console.log("Unsubscribed from players");
+    off(playersRef);
+
+    updatePlayersList();
   }
 </script>
 
