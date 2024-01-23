@@ -3,6 +3,9 @@ import http from "http";
 import cors from "cors";
 import { Player, Room } from "../../Shared-types/types";
 import * as utils from "./utils";
+import { getDatabase, ref, set } from "firebase/database";
+import { initializeApp } from "firebase/app";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -11,6 +14,19 @@ const server = http.createServer(app);
 let rooms: Room[] = [];
 
 let players: Player[] = [];
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAD5zy3_1xS7sQvHVf00zMht5RNcCUzoYQ",
+  authDomain: "obviously-5a958.firebaseapp.com",
+  projectId: "obviously-5a958",
+  storageBucket: "obviously-5a958.appspot.com",
+  messagingSenderId: "738128384006",
+  appId: "1:738128384006:web:6a99f01b6dd55eb942b387",
+  databaseURL:
+    "https://obviously-5a958-default-rtdb.europe-west1.firebasedatabase.app",
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
 
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.json({ message: "connection made" });
@@ -35,6 +51,29 @@ app.get(
     res.json({ room: roomAsJson });
   }
 );
+
+function savePlayer(player: Player) {
+  console.log(`Saving player ${player.name} to database`);
+  const db = getDatabase(firebaseApp);
+
+  if (player.room == null || player.room.code == null) {
+    console.log("Player not in room");
+    return;
+  }
+
+  const playerData = {
+    name: player.name,
+    id: player.id,
+  };
+
+  set(ref(db, `${player.room.code}/${player.id}`), playerData)
+    .then(() => {
+      console.log("Player saved successfully");
+    })
+    .catch((error) => {
+      console.error("Error saving player: ", error);
+    });
+}
 
 function generateRoomCode() {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -100,7 +139,9 @@ app.post(
     const player = players.find((player) => player.id === playerId);
     if (player) {
       addPlayerToRoom(player, room);
+      savePlayer(player);
     }
+
     const roomAsJson = utils.serializeRoom(room);
 
     res.json({ room: roomAsJson });
