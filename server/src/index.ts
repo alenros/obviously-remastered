@@ -120,12 +120,14 @@ function createNewPlayer(name: string) {
 function addPlayerToRoom(player: Player, room: Room) {
   console.log(`player ${player.id} is joining room ${room.code}`);
   player.room = room;
+  savePlayer(player);
   room.players.push(player);
 }
 
 function removePlayerFromRoom(player: Player, room: Room) {
   console.log(`player ${player.id} is leaving room ${room.code}`);
   player.room = null;
+  savePlayer(player);
   room.players = room.players.filter((p) => p.id !== player.id);
 }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   export let hasGameStarted = false;
-  export let roomId: number;
+  export let roomId: string;
   import PlayersList from "./PlayersList.svelte";
 
   async function startGame() {

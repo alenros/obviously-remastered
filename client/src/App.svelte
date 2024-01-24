@@ -3,7 +3,7 @@
   import { players } from "./store";
   import { initializeApp } from "firebase/app";
   import { getDatabase, onValue, ref, off } from "firebase/database";
-  // import {Player, Room} from "../../shared-types/types";
+  import type { Player, Room } from "../../shared-types/types";
 
   export let name: string;
   export let roomId: string;
@@ -24,14 +24,12 @@
   console.log(app);
   const database = getDatabase(app);
 
-  let playersRef = ref(database, `${roomId}/players/`);
+  let playersRef = ref(database, `${roomId}/`);
 
   let hasGameStarted = false;
 
   function subscribeToPlayers() {
-    console.log("Added listener for Players on room " + roomId);
-
-    playersRef = ref(database, `${roomId}/players/`);
+    playersRef = ref(database, `${roomId}/`);
 
     onValue(playersRef, (snapshot) => {
       const data = snapshot.val();
@@ -41,28 +39,9 @@
         return;
       }
 
-      console.log(`players data: ${JSON.stringify(data)}`);
-      // console.log(`222: ${(data["222"]).id} ${(data["222"]).name}`);
-      let newPlayers = Object.entries(JSON.parse(`"${data}"`)).map(([id, player]) => ({
-        id,
-        name: player.name,
-      }));
-      console.log(`new players: ${JSON.stringify(newPlayers)}`);
-      newPlayers.forEach((player) => {
-        console.log(`player: ${player}`);
-        console.log(`player: ${player.id} ${player.name}`);
-      });
-      // console.log(`new players: ${newPlayers}`);
+      const newPlayers : Player[] = Object.values(data);
 
-      // let newPlayer = {
-      //   id: data.id,
-      //   name: data.name,
-      // };
-
-      // console.log(`new player: ${JSON.stringify(newPlayer)}`);
-      // players.update((currentPlayers) => [...currentPlayers, newPlayer]);
-
-      // players.set(data["player"]);
+      players.set(newPlayers);
     });
   }
 
@@ -152,11 +131,6 @@
     // updatePlayersList();
   }
 
-  async function updatePlayersList() {
-    console.log(`Updating players list for room ${roomId}`);
-    players.refreshList(roomId);
-  }
-
   async function leaveRoom() {
     if (name === undefined) {
       console.log("Player Name is undefined");
@@ -189,8 +163,6 @@
     // playersRef = ref(database, `${roomId}/players/`);
     console.log("Unsubscribed from players");
     off(playersRef);
-
-    updatePlayersList();
   }
 </script>
 
