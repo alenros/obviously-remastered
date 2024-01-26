@@ -21,15 +21,14 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  console.log(app);
   const database = getDatabase(app);
 
-  let playersRef = ref(database, `${roomId}/`);
+  let playersRef = ref(database, `${roomId}/players/`);
 
   let hasGameStarted = false;
 
   function subscribeToPlayers() {
-    playersRef = ref(database, `${roomId}/`);
+    playersRef = ref(database, `${roomId}/players/`);
 
     onValue(playersRef, (snapshot) => {
       const data = snapshot.val();

@@ -66,7 +66,7 @@ function savePlayer(player: Player) {
     id: player.id,
   };
 
-  set(ref(db, `${player.room.code}/${player.id}`), playerData)
+  set(ref(db, `${player.room.code}/players/${player.id}`), playerData)
     .then(() => {
       console.log("Player saved successfully");
     })
