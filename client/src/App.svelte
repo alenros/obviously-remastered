@@ -49,10 +49,40 @@
     let response = await createRoom(playerId);
     console.log(response);
     roomId = response.room.code;
-
+    let player: Player = { id: playerId, name: name, room: response.room};
+    joinSpecificRoom(response.room, player);
     subscribeToPlayers();
 
     console.log(`Room id returned: ${roomId}`);
+  }
+
+  async function joinSpecificRoom(room: Room, player: Player) {
+    if (player.name === undefined) {
+      console.log("Player Name is undefined");
+      return;
+    }
+    if (room.code === undefined) {
+      console.log("Room Id is undefined");
+      return;
+    }
+    let playerId = await createPlayer();
+    console.log(`Joining room ${room.code} for player ${player.id}`);
+    await fetch(
+      `http://localhost:5000/api/v1/rooms/${room.code}/players/${player.id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+      .then(async (res) => await res.json())
+      .then((data) => {
+        console.log(data);
+        // TODO Ensure that the player has joined the room before setting hasJoinedRoom to true
+        hasJoinedRoom = true;
+      })
+      .catch((err) => console.log(err));
   }
 
   async function createRoom(playerId: number) {
