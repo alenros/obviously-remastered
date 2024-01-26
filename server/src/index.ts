@@ -74,6 +74,9 @@ function savePlayer(player: Player) {
       console.error("Error saving player: ", error);
     });
 
+  saveUpdateTime(player.room);
+}
+
 function saveRoom(room: Room) {
   console.log(`Saving room ${room.code} to database`);
   const db = getDatabase(firebaseApp);
@@ -92,6 +95,24 @@ function saveRoom(room: Room) {
 
   saveUpdateTime(room);
 }
+
+function saveUpdateTime(room: Room) {
+  if (room.code == null) return;
+
+  console.log(`Setting update time for ${room.code}`);
+  const db = getDatabase(firebaseApp);
+
+  const currentDate = {
+    lastChange: new Date().toLocaleString("en-GB"),
+  };
+
+  set(ref(db, `${room.code}/updatetime`), currentDate)
+    .then(() => {
+      console.log("Room saved successfully");
+    })
+    .catch((error) => {
+      console.error("Error saving room: ", error);
+    });
 }
 
 function generateRoomCode() {
