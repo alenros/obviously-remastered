@@ -73,6 +73,25 @@ function savePlayer(player: Player) {
     .catch((error) => {
       console.error("Error saving player: ", error);
     });
+
+function saveRoom(room: Room) {
+  console.log(`Saving room ${room.code} to database`);
+  const db = getDatabase(firebaseApp);
+
+  const roomData = {
+    hasGameStarted: room.hasGameStarted,
+  };
+
+  set(ref(db, `${room.code}/gameState`), roomData)
+    .then(() => {
+      console.log("Room saved successfully");
+    })
+    .catch((error) => {
+      console.error("Error saving room: ", error);
+    });
+
+  saveUpdateTime(room);
+}
 }
 
 function generateRoomCode() {
@@ -183,6 +202,9 @@ app.put(
       res.status(404).json({ message: "Room not found" });
     } else {
       room.hasGameStarted = req.body.hasGameStarted;
+
+      saveRoom(room);
+
       const roomAsJson = utils.serializeRoom(room);
 
       res.json({ room: roomAsJson });
