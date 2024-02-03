@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import cors from "cors";
-import { Player, Room } from "../../Shared-types/types";
+import { Player, Room, Word } from "../../Shared-types/types";
 import * as utils from "./utils";
 import { getDatabase, ref, set } from "firebase/database";
 import { initializeApp } from "firebase/app";
@@ -61,10 +61,30 @@ function savePlayer(player: Player) {
     return;
   }
 
-  const playerData = {
+  let playerWords: string = "";
+  if (player.words.length > 0) {
+    playerWords = player.words
+      .filter((word) => word != null)
+      .map((word) => word.text)
+      .reduce((acc, curr) => acc + "," + curr, "");
+  }
+
+  interface PlayerData {
+    name: string;
+    id: number;
+    words?: { words: string };
+  }
+
+  let playerData: PlayerData = {
     name: player.name,
     id: player.id,
   };
+
+  if (playerWords.length > 0) {
+    playerData.words = {
+      words: playerWords,
+    };
+  }
 
   set(ref(db, `${player.room.code}/players/${player.id}`), playerData)
     .then(() => {
@@ -81,8 +101,17 @@ function saveRoom(room: Room) {
   console.log(`Saving room ${room.code} to database`);
   const db = getDatabase(firebaseApp);
 
+  let sharedWords = "";
+  if (room.sharedWords.length > 0) {
+    sharedWords = room.sharedWords
+      .filter((word) => word != null && word.text != null)
+      .map((word) => word.text)
+      .toString();
+
+  }
   const roomData = {
     hasGameStarted: room.hasGameStarted,
+    sharedWords: sharedWords,
   };
 
   set(ref(db, `${room.code}/gameState`), roomData)
@@ -124,6 +153,27 @@ function generateRoomCode() {
   return result;
 }
 
+function getRandomWords(n: number) {
+  const words: Word[] = [
+    { text: "cat" },
+    { text: "dog" },
+    { text: "mouse" },
+    { text: "horse" },
+    { text: "cow" },
+    { text: "sheep" },
+    { text: "goat" },
+    { text: "pig" },
+    { text: "chicken" },
+    { text: "duck" },
+    { text: "turkey" },
+    { text: "rabbit" },
+  ];
+
+  let chosenWords: Word[] = utils.shuffle(words, n);
+
+  return chosenWords;
+}
+
 // Function to generate a player ID
 function generatePlayerId() {
   return Math.floor(Math.random() * 1000000);
@@ -134,6 +184,7 @@ function createNewRoom() {
     code: generateRoomCode(),
     players: [],
     hasGameStarted: false,
+    sharedWords: [],
   };
 
   console.log(`Creating new room with code: ${room.code}`);
@@ -153,6 +204,8 @@ function createNewPlayer(name: string) {
     id: generatePlayerId(),
     name: name,
     room: null,
+    words: [],
+    chosenWordPair: null,
   };
   return player;
 }
@@ -160,15 +213,39 @@ function createNewPlayer(name: string) {
 function addPlayerToRoom(player: Player, room: Room) {
   console.log(`player ${player.id} is joining room ${room.code}`);
   player.room = room;
-  savePlayer(player);
   room.players.push(player);
+  savePlayer(player);
 }
 
 function removePlayerFromRoom(player: Player, room: Room) {
   console.log(`player ${player.id} is leaving room ${room.code}`);
   player.room = null;
-  savePlayer(player);
   room.players = room.players.filter((p) => p.id !== player.id);
+  savePlayer(player);
+}
+
+function startGame(room: Room) {
+  // Each player gets 2 private words.
+  // There are also one shared words for each player, plus one.
+  // In total there are 3 * n + 1 words.
+
+  const numberOfPlayers = room.players.length;
+  const numberOfWords = numberOfPlayers * 3 + 1;
+
+  const words = getRandomWords(numberOfWords);
+
+  room.sharedWords = words.slice(numberOfPlayers);
+  saveRoom(room);
+  // Assign words to players
+  for (let playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++) {
+    const wordIndex = playerIndex * 2;
+
+    const player = room.players[playerIndex];
+
+    player.words = words.slice(wordIndex, wordIndex + 1);
+
+    savePlayer(player);
+  }
 }
 
 // Player creates and joins room
@@ -218,12 +295,24 @@ app.put(
   (req: Request, res: Response, next: NextFunction) => {
     console.log(`Updating room: ${req.params.id}`);
 
-    const room = rooms.find((room) => room.code === req.params.id);
+    let room = rooms.find((room) => room.code === req.params.id);
+
     if (!room) {
       res.status(404).json({ message: "Room not found" });
     } else {
-      room.hasGameStarted = req.body.hasGameStarted;
+      let newRoomStartStatus = req.body.hasGameStarted;
 
+      // Remove duplicate players from room
+      room.players = room.players.filter(
+        (player, index, self) =>
+          index === self.findIndex((p) => p.id === player.id)
+      );
+
+      let hasGameBeenStarted = !room.hasGameStarted && newRoomStartStatus;
+      if (hasGameBeenStarted) {
+        startGame(room);
+      }
+      room.hasGameStarted;
       saveRoom(room);
 
       const roomAsJson = utils.serializeRoom(room);
