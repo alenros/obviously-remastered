@@ -38,8 +38,9 @@ for i from 0 to n−2 do
 
 */
   for (let i = 0; i < n - 2; i++) {
-    let j = Math.floor(Math.random() * (i - n + 1)) + i;
+    let j = Math.floor(Math.random() * (n - i + 1) + i);
     [[array[i]], [array[j]]] = [[array[j]], [array[i]]];
   }
-  return array;
+
+  return array.slice(0, n);
 }
