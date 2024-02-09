@@ -311,7 +311,7 @@ app.put(
       if (hasGameBeenStarted) {
         startGame(room);
       }
-      room.hasGameStarted;
+      room.hasGameStarted = hasGameBeenStarted;
       saveRoom(room);
 
       const roomAsJson = utils.serializeRoom(room);
