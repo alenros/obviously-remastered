@@ -66,7 +66,7 @@ function savePlayer(player: Player) {
     playerWords = player.words
       .filter((word) => word != null)
       .map((word) => word.text)
-      .reduce((acc, curr) => acc + "," + curr, "");
+      .join(",");
   }
 
   interface PlayerData {
