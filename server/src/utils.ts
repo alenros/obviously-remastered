@@ -20,8 +20,8 @@ export function serializeRoom(room: Room) {
     players: room.players.map(serializePlayer),
     hasGameStarted: room.hasGameStarted,
     sharedWords: room.sharedWords
-                      .filter((word) => word?.text.length > 0)
-                      .map((word) => word.text),
+                     .filter((word) => word?.text.length > 0)
+                     .map((word) => word.text),
   };
 }
 

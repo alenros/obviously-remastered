@@ -107,7 +107,6 @@ function saveRoom(room: Room) {
       .filter((word) => word != null && word.text != null)
       .map((word) => word.text)
       .toString();
-
   }
   const roomData = {
     hasGameStarted: room.hasGameStarted,
