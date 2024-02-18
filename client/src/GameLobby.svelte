@@ -16,7 +16,7 @@
     })
       .then(async (res) => await res.json())
       .then((data) => {
-        console.log(data);
+        console.log(`startGame: ${JSON.stringify(data)}`);
         hasGameStarted = true;
         data.room.sharedWords.forEach((word: string) => {
           shardWords = [...shardWords, { text: word }];
