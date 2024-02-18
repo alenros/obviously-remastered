@@ -3,7 +3,7 @@
   import { players } from "./store";
   import { initializeApp } from "firebase/app";
   import { getDatabase, onValue, ref, off } from "firebase/database";
-  import type { Player, Room } from "../../shared-types/types";
+  import type { Player, Room, Word } from "../../shared-types/types";
 
   export let name: string;
   export let roomId: string;
@@ -38,8 +38,20 @@
         return;
       }
 
-      const newPlayers : Player[] = Object.values(data);
-
+      const newPlayers: Player[] = Object.values(data);
+      newPlayers.forEach((player) => {
+        if (player.words === undefined || player.words === null) {
+          player.words = [];
+          return;
+        }
+        // split the words string into an array
+        const stringifiedWords = JSON.stringify(player.words);
+        let ws  = JSON.parse(stringifiedWords).words.split(",").map((wordText: string) => {
+          const w: Word = { text: wordText };
+          return w;
+        });
+        player.words = ws;
+      });
       players.set(newPlayers);
     });
   }
@@ -49,7 +61,16 @@
     let response = await createRoom(playerId);
     console.log(response);
     roomId = response.room.code;
-    let player: Player = { id: playerId, name: name, room: response.room};
+
+    let currentPlayer: Player = response.room.players[0];
+    let player: Player = {
+      id: playerId,
+      name: name,
+      room: response.room,
+      words: currentPlayer.words,
+      chosenWordPair: currentPlayer.chosenWordPair,
+    };
+    players.set([player]);
     joinSpecificRoom(response.room, player);
     subscribeToPlayers();
 
