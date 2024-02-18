@@ -233,7 +233,7 @@ function startGame(room: Room) {
 
   const words = getRandomWords(numberOfWords);
 
-  room.sharedWords = words.slice(numberOfPlayers);
+  room.sharedWords = words.slice(numberOfPlayers + 1);
   saveRoom(room);
   // Assign words to players
   for (let playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++) {
@@ -241,8 +241,7 @@ function startGame(room: Room) {
 
     const player = room.players[playerIndex];
 
-    player.words = words.slice(wordIndex, wordIndex + 1);
-
+    player.words = words.slice(wordIndex, wordIndex + 1 + 1);
     savePlayer(player);
   }
 }
