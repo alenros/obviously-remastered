@@ -220,8 +220,14 @@ function removePlayerFromRoom(player: Player, room: Room) {
   console.log(`player ${player.id} is leaving room ${room.code}`);
   player.room = null;
   room.players = room.players.filter((p) => p.id !== player.id);
+
+  if (room.players.length === 0) {
+    console.log(`Room ${room.code} is empty, removing it`);
+    rooms = rooms.filter(r => r.code !== room.code);
+  }
   savePlayer(player);
 }
+
 
 function startGame(room: Room) {
   // Each player gets 2 private words.
